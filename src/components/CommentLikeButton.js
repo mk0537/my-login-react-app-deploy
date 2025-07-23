@@ -1,30 +1,29 @@
-// 댓글용 좋아요 버튼
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import empty_heart from "../asset/icons/empty_heart.png";
 import full_heart from "../asset/icons/full_heart.png";
+import { UserContext } from "../contexts/UserContext";
+import { fetchLikeCount, fetchLikeStatus, toggleCommentLike } from "../api/likes";
 
 const CommentLikeButton = ({ commentId }) => {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
-  const token = localStorage.getItem("token");
+
+  const { user } = useContext(UserContext);
+  const token = user?.token;
 
   useEffect(() => {
     if (!commentId) return;
 
-    // 댓글 좋아요 수 조회
-    fetch(`http://http://54.89.157.164/likes/comments/${commentId}`)
-      .then((res) => res.json())
-      .then((data) => setLikeCount(data.likeCount))
+    fetchLikeCount(commentId)
+      .then(setLikeCount)
       .catch(console.error);
 
-    // 로그인 상태일 때만 좋아요 상태 조회
     if (token) {
-      fetch(`http://http://54.89.157.164/likes/comments/${commentId}/status`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((res) => res.json())
-        .then((data) => setLiked(data.liked))
+      fetchLikeStatus(commentId)
+        .then(setLiked)
         .catch(console.error);
+    } else {
+      setLiked(false);
     }
   }, [commentId, token]);
 
@@ -37,13 +36,7 @@ const CommentLikeButton = ({ commentId }) => {
     }
 
     try {
-      const res = await fetch(`http://54.89.157.164/likes/comments/${commentId}`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const data = await res.json();
-      const newLiked = data.result === "liked";
+      const newLiked = await toggleCommentLike(commentId);
       setLiked(newLiked);
       setLikeCount((prev) => (newLiked ? prev + 1 : Math.max(prev - 1, 0)));
     } catch (error) {

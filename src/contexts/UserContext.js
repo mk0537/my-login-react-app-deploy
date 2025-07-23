@@ -16,6 +16,8 @@ export const UserProvider = ({ children }) => {
 
     if (token && email && nickName) {
       setUser({ token, email, nickName, name });
+    }else {
+      setUser(null); 
     }
   }, []);
 

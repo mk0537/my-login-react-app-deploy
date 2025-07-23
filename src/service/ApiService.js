@@ -11,7 +11,8 @@ export function call(api, method, request) {
         method: method,
         headers: {//요청 헤더를 설정.
             "Content-Type": "application/json"
-        }
+        },
+        withCredentials: true,
     };
 
     // request가 존재하는 경우: POST, PUT, DELETE와 같은 GET 이외의 요청일 때, 요청 본문에 데이터를 담아 보낸다.

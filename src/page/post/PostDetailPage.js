@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { fetchPostById, deletePost } from "../../api/posts";
 import PostLikeButton from "../../components/PostLikeButton";
 import CommentList from "../../components/CommentList";
+import { formatRelativeTime } from "../../utils/date";
 
 import DOMPurify from "dompurify";
 
@@ -30,21 +31,7 @@ const PostDetailPage = () => {
 
   if (!post) return <div style={{ marginTop: "80px" }}>로딩 중...</div>;
 
-  const formatRelativeTime = (timestamp) => {
-    const now = new Date();
-    const target = new Date(timestamp);
-    const diffMs = now - target;
-    const diffSec = Math.floor(diffMs / 1000);
-    const diffMin = Math.floor(diffSec / 60);
-    const diffHour = Math.floor(diffMin / 60);
-    const diffDay = Math.floor(diffHour / 24);
-
-    if (diffSec < 60) return "방금 전";
-    if (diffMin < 60) return `${diffMin}분 전`;
-    if (diffHour < 24) return `${diffHour}시간 전`;
-    return `${diffDay}일 전`;
-  };
-
+  // 사용
   const timeAgo = post?.createdAt ? formatRelativeTime(post.createdAt) : "작성일 정보 없음";
 
   const _handleEdit = () => {

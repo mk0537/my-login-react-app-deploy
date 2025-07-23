@@ -1,6 +1,6 @@
 import axiosInstance from "./axiosInstance";
 
-const BASE_URL = "/posts"; // axiosInstance에 baseURL 이미 http://localhost:8080 설정되어 있음
+const BASE_URL = "/posts"; 
 
 // 게시글 전체 조회
 export const fetchPosts = () => {
@@ -45,7 +45,12 @@ export const deletePost = (id) => {
     alert("로그인이 필요합니다.");
     return;
   }
-  return axiosInstance.delete(`${BASE_URL}/${id}`);
+
+  return axiosInstance.delete(`${BASE_URL}/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 };
 
 // 제목 검색
@@ -82,9 +87,9 @@ export const uploadImage = async (blob) => {
       },
     });
 
+    // 서버가 준 상대 경로를 절대 경로로 변환해서 반환
     if (res.data?.imageUrl) {
-      // baseURL 동적으로 활용
-      return `${axiosInstance.defaults.baseURL}${res.data.imageUrl}`;
+      return `http://54.89.157.164:8080${res.data.imageUrl}`;
     }
     return null;
   } catch (error) {
@@ -93,5 +98,3 @@ export const uploadImage = async (blob) => {
     return null;
   }
 };
-
-

@@ -16,6 +16,8 @@ const HeaderButtons = () => {
   if (hideHeader) return null;
 
   const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
     localStorage.removeItem("token");
     localStorage.removeItem("email");
     localStorage.removeItem("nickName");

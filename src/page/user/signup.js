@@ -3,6 +3,7 @@ import "../../css/styles.css";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { UserContext } from "../../contexts/UserContext";
+import { checkNickname, checkEmail, signup, signin } from "../../api/users";
 
 const ErrorMessage = styled.span`
   color: red;
@@ -30,8 +31,7 @@ const Signup = () => {
   const [isConfirmValid, setIsConfirmValid] = useState(false);
 
   const navigate = useNavigate();
-  const { setUser } = useContext(UserContext); // UserContext 사용
-
+  const { setUser } = useContext(UserContext);
 
   const onChangeName = (e) => {
     const currentName = e.target.value;
@@ -65,18 +65,7 @@ const Signup = () => {
     }
 
     try {
-      const response = await fetch(
-        `http://54.89.157.164/login/auth/check-nickname?nickname=${encodeURIComponent(
-          currentNickName
-        )}`
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-
+      const result = await checkNickname(currentNickName);
       if (result.exists) {
         setNickNameMessage("이미 존재하는 닉네임입니다.");
         setIsNickNameValid(false);
@@ -111,18 +100,7 @@ const Signup = () => {
     }
 
     try {
-      const response = await fetch(
-        `http://54.89.157.164/login/auth/check-email?email=${encodeURIComponent(
-          currentEmail
-        )}`
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-
+      const result = await checkEmail(currentEmail);
       if (result.exists) {
         setEmailMessage("이미 존재하는 이메일입니다.");
         setIsEmailValid(false);
@@ -197,39 +175,12 @@ const Signup = () => {
     }
 
     try {
-      // 1) 회원가입 요청
-      const signupRes = await fetch("http://54.89.157.164/login/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({ email, password, name, nickName }),
-      });
+      // 회원가입 요청
+      await signup({ email, password, name, nickName });
 
-      if (!signupRes.ok) {
-        const errData = await signupRes.json().catch(() => ({}));
-        throw new Error(errData.message || "회원가입 실패");
-      }
+      // 회원가입 성공 시 자동 로그인
+      const loginResult = await signin({ email, password });
 
-      // 2) 회원가입 성공하면 자동 로그인 API 호출
-      const loginRes = await fetch("http://54.89.157.164/login/signin", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-        credentials: "include"
-      });
-
-      if (!loginRes.ok) {
-        const errData = await loginRes.json().catch(() => ({}));
-        throw new Error(errData.message || "자동 로그인 실패");
-      }
-
-      const loginResult = await loginRes.json();
-
-      // 3) UserContext 및 localStorage에 로그인 정보 저장
       setUser({
         email: loginResult.email,
         nickName: loginResult.nickName,
@@ -245,10 +196,9 @@ const Signup = () => {
 
       alert("회원가입이 완료되었습니다.");
       navigate("/");
-
     } catch (error) {
       console.error(error);
-      alert("오류 발생: " + error.message);
+      alert("오류 발생: " + error.data?.message || error.message || "알 수 없는 오류");
     }
   };
 
@@ -338,10 +288,10 @@ const Signup = () => {
           <div className="button-group">
             <button type="submit" className="login-btn">
               회원가입하기
-          </button>
-          <button type="button" className="signup-btn" onClick={_loginOnclick}>
+            </button>
+            <button type="button" className="signup-btn" onClick={_loginOnclick}>
               돌아가기
-          </button>
+            </button>
           </div>
         </form>
       </div>

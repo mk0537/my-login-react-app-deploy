@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { issueTempPassword } from '../../api/users';
 
 const TempPassword = () => {
   const [email, setEmail] = useState('');
   const [tempPassword, setTempPassword] = useState('');
   const [error, setError] = useState('');
-
   const navigate = useNavigate();
 
   const handleResetPassword = async (e) => {
@@ -14,24 +14,11 @@ const TempPassword = () => {
     setError('');
 
     try {
-      const response = await fetch('http://54.89.157.164/login/temp-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }), // newPassword 제거
-      });
-
-      const text = await response.text(); // 평문 응답 받기
-
-      if (response.ok) {
-        setTempPassword(text); // 임시 비밀번호 텍스트 그대로 표시
-      } else {
-        setError(text || '임시 비밀번호 발급에 실패했습니다.');
-      }
+      const tempPwd = await issueTempPassword({ email });
+      setTempPassword(tempPwd);
     } catch (err) {
-      console.error('에러 발생:', err);
-      setError('서버와의 연결 중 오류가 발생했습니다.');
+      const message = err.response?.data || '임시 비밀번호 발급에 실패했습니다.';
+      setError(message);
     }
   };
 
@@ -65,12 +52,11 @@ const TempPassword = () => {
             <br />
             <small>로그인 후 반드시 비밀번호를 변경하세요.</small>
             <div className='button-group-temp-password'>
-                <button type="button" className="temp-password-btn" onClick={_loginOnclick}>
-                  로그인 하러 가기
-                </button>
+              <button type="button" className="temp-password-btn" onClick={_loginOnclick}>
+                로그인 하러 가기
+              </button>
             </div>
           </div>
-          
         )}
 
         {error && (

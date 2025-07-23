@@ -1,33 +1,38 @@
-// 게시글용 좋아요 버튼
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import empty_heart from "../asset/icons/empty_heart.png";
 import full_heart from "../asset/icons/full_heart.png";
+import axiosInstance from "../api/axiosInstance";
+import { UserContext } from "../contexts/UserContext";
 
 const PostLikeButton = ({ postId }) => {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
-  const token = localStorage.getItem("token");
+
+  const { user } = useContext(UserContext);
+  const token = user?.token;
 
   useEffect(() => {
-    // 좋아요 수 조회
-    fetch(`http://http://54.89.157.164/likes/${postId}`)
-      .then((res) => res.json())
-      .then((data) => setLikeCount(data.likeCount))
+    // 좋아요 수 가져오기
+    axiosInstance
+      .get(`/likes/${postId}`)
+      .then((res) => setLikeCount(res.data.likeCount))
       .catch(console.error);
 
-    // 로그인 상태일 때만 좋아요 상태 조회
+    // 로그인 시 상태 가져오기
     if (token) {
-      fetch(`http://http://54.89.157.164/likes/${postId}/status`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((res) => res.json())
-        .then((data) => setLiked(data.liked))
-        .catch(console.error);
+      axiosInstance
+        .get(`/likes/${postId}/status`)
+        .then((res) => setLiked(res.data.liked))
+        .catch((err) => {
+          console.error("좋아요 상태 조회 실패:", err);
+        });
+    } else {
+      setLiked(false);
     }
   }, [postId, token]);
 
   const handleLike = async (e) => {
-    e.stopPropagation(); // 게시글 클릭 방지
+    e.stopPropagation();
 
     if (!token) {
       alert("로그인 후 이용 가능합니다.");
@@ -35,13 +40,8 @@ const PostLikeButton = ({ postId }) => {
     }
 
     try {
-      const res = await fetch(`http://54.89.157.164/likes/${postId}`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const data = await res.json();
-      const newLiked = data.result === "liked";
+      const res = await axiosInstance.post(`/likes/${postId}`);
+      const newLiked = res.data.result === "liked";
       setLiked(newLiked);
       setLikeCount((prev) => (newLiked ? prev + 1 : Math.max(prev - 1, 0)));
     } catch (error) {
