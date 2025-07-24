@@ -2,7 +2,11 @@ import React, { useState, useEffect, useContext } from "react";
 import empty_heart from "../asset/icons/empty_heart.png";
 import full_heart from "../asset/icons/full_heart.png";
 import { UserContext } from "../contexts/UserContext";
-import { fetchLikeCount, fetchLikeStatus, toggleCommentLike } from "../api/likes";
+import {
+  fetchCommentLikeCount,
+  fetchCommentLikeStatus,
+  toggleCommentLike,
+} from "../api/likes";
 
 const CommentLikeButton = ({ commentId }) => {
   const [liked, setLiked] = useState(false);
@@ -14,16 +18,20 @@ const CommentLikeButton = ({ commentId }) => {
   useEffect(() => {
     if (!commentId) return;
 
-    fetchLikeCount(commentId)
+    // 댓글 좋아요 수 조회
+    fetchCommentLikeCount(commentId)
       .then(setLikeCount)
       .catch(console.error);
 
+    // 토큰 존재 시 댓글 좋아요 상태 조회
     if (token) {
-      fetchLikeStatus(commentId)
+      fetchCommentLikeStatus(commentId)
         .then(setLiked)
-        .catch(console.error);
+        .catch((err) => {
+          console.error("댓글 좋아요 상태 조회 실패:", err);
+        });
     } else {
-      setLiked(false);
+      setLiked(false); // 비로그인 시 상태 초기화
     }
   }, [commentId, token]);
 

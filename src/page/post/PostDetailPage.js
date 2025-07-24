@@ -15,19 +15,24 @@ const PostDetailPage = () => {
   const email = localStorage.getItem("email"); // 작성자 본인 확인용
 
   useEffect(() => {
+    if (!token) {
+      alert("로그인 후 이용 가능합니다.");
+      navigate("/login");
+      return;
+    }
+
     const fetchData = async () => {
       try {
         const res = await fetchPostById(id);
-        console.log("응답 구조 확인:", res);
-        console.log("post data:", res.data); 
         setPost(res.data);
       } catch (err) {
         console.error("게시글 조회 실패", err);
+        // 필요하면 여기서도 401 처리 가능
       }
     };
 
     fetchData();
-  }, [id]);
+  }, [id, token, navigate]);
 
   if (!post) return <div style={{ marginTop: "80px" }}>로딩 중...</div>;
 
@@ -83,18 +88,18 @@ const PostDetailPage = () => {
             </span>
           </div>
           {post.email === email ? (
-            <div className="button-group2" style={{ marginTop: "10px" }}>
-              <PostLikeButton postId={post.id} />
-              <button className="update-btn" onClick={_handleEdit}>
-                수정
-              </button>
-              <button className="update-btn" onClick={_handleDelete}>
-                삭제
-              </button>
-            </div>
-          ) : (
-            <PostLikeButton postId={post.id} />
-          )}
+          <div className="button-group2" style={{ marginTop: "10px" }}>
+            {token && post?.id && <PostLikeButton postId={post.id} />}
+            <button className="update-btn" onClick={_handleEdit}>
+              수정
+            </button>
+            <button className="update-btn" onClick={_handleDelete}>
+              삭제
+            </button>
+          </div>
+        ) : (
+          token && post?.id && <PostLikeButton postId={post.id} />
+        )}
         </div>
 
         <div className="post-detail-container">

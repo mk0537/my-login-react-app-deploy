@@ -1,10 +1,23 @@
+// UTC 기준으로 Date 객체 생성 (시간대 문제 해결)
 export const toDateFromArray = (arr) =>
   Array.isArray(arr) && arr.length === 7
-    ? new Date(Date.UTC(arr[0], arr[1] - 1, arr[2], arr[3], arr[4], arr[5], arr[6]))
+    ? new Date(Date.UTC(
+        arr[0],          // year
+        arr[1] - 1,      // month (0-based)
+        arr[2],          // day
+        arr[3],          // hour
+        arr[4],          // minute
+        arr[5],          // second
+        Math.floor(arr[6] / 1_000_000) // nanoseconds → milliseconds
+      ))
     : null;
 
+// 상대 시간 포맷팅 함수
 export const formatRelativeTime = (timestamp) => {
-  const target = Array.isArray(timestamp) ? toDateFromArray(timestamp) : new Date(timestamp);
+  const target = Array.isArray(timestamp)
+    ? toDateFromArray(timestamp)
+    : new Date(timestamp);
+
   if (!target || isNaN(target)) return '작성일 정보 없음';
 
   const now = new Date();

@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useContext } from "react";
-import empty_heart from "../asset/icons/empty_heart.png";
 import full_heart from "../asset/icons/full_heart.png";
-import axiosInstance from "../api/axiosInstance";
+import empty_heart from "../asset/icons/empty_heart.png";
 import { UserContext } from "../contexts/UserContext";
+import {
+  fetchLikeCount,
+  fetchLikeStatus,
+  togglePostLike,
+} from "../api/likes";
 
 const PostLikeButton = ({ postId }) => {
   const [liked, setLiked] = useState(false);
@@ -12,22 +16,24 @@ const PostLikeButton = ({ postId }) => {
   const token = user?.token;
 
   useEffect(() => {
-    // 좋아요 수 가져오기
-    axiosInstance
-      .get(`/likes/${postId}`)
-      .then((res) => setLikeCount(res.data.likeCount))
-      .catch(console.error);
+    if (!postId) return;
 
-    // 로그인 시 상태 가져오기
+    // 게시글 좋아요 수 조회
+    fetchLikeCount(postId)
+      .then(setLikeCount)
+      .catch((err) => {
+        console.error("게시글 좋아요 수 조회 실패:", err);
+      });
+
+    // 로그인한 경우에만 좋아요 상태 조회
     if (token) {
-      axiosInstance
-        .get(`/likes/${postId}/status`)
-        .then((res) => setLiked(res.data.liked))
+      fetchLikeStatus(postId)
+        .then((liked) => {
+          setLiked(liked);
+        })
         .catch((err) => {
-          console.error("좋아요 상태 조회 실패:", err);
+          console.error("게시글 좋아요 상태 조회 실패:", err);
         });
-    } else {
-      setLiked(false);
     }
   }, [postId, token]);
 
@@ -40,12 +46,11 @@ const PostLikeButton = ({ postId }) => {
     }
 
     try {
-      const res = await axiosInstance.post(`/likes/${postId}`);
-      const newLiked = res.data.result === "liked";
-      setLiked(newLiked);
-      setLikeCount((prev) => (newLiked ? prev + 1 : Math.max(prev - 1, 0)));
-    } catch (error) {
-      console.error("좋아요 처리 실패:", error);
+      const { result, likeCount: updatedCount } = await togglePostLike(postId);
+      setLiked(result === "liked");
+      setLikeCount(updatedCount);
+    } catch (err) {
+      console.error("게시글 좋아요 처리 실패:", err);
     }
   };
 

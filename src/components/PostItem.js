@@ -1,3 +1,4 @@
+// src/components/PostItem.js
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { increaseViewCount } from "../api/posts";
@@ -10,15 +11,15 @@ const PostItem = ({ post }) => {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const navigate = useNavigate();
-  const token = localStorage.getItem("token");
 
   useEffect(() => {
-    // 좋아요 수 조회
+    // 좋아요 수 조회 (로그인 여부 관계없이 가능)
     fetchLikeCount(post.id)
       .then(setLikeCount)
       .catch((err) => console.error("좋아요 수 조회 실패:", err));
 
-    // 로그인 상태일 때만 좋아요 상태 조회
+    // 토큰이 존재할 때만 좋아요 상태 조회 실행
+    const token = localStorage.getItem("token");
     if (token) {
       fetchLikeStatus(post.id)
         .then(setLiked)
@@ -26,13 +27,15 @@ const PostItem = ({ post }) => {
     } else {
       setLiked(false);
     }
-  }, [post.id, token]);
+  }, [post.id]);
 
   const timeAgo = post?.createdAt
     ? formatRelativeTime(post.createdAt)
     : "작성일 정보 없음";
 
   const handleClick = async () => {
+    const token = localStorage.getItem("token");
+
     if (!token) {
       alert("로그인 후 게시글을 열람할 수 있습니다.");
       navigate("/login");
@@ -80,7 +83,7 @@ const PostItem = ({ post }) => {
             작성일: <strong>{timeAgo}</strong>
           </span>
         </div>
-        <LikeButton postId={post.id} />
+        <LikeButton postId={post.id} liked={liked} setLiked={setLiked} likeCount={likeCount} setLikeCount={setLikeCount} />
       </div>
     </div>
   );

@@ -4,7 +4,7 @@ const Footer = () => {
             <div className="footer-container">
                 <p>만든이 : 김민경 </p>
                 <p>전화번호 : 010-5751-0537</p>
-                <p>gihhub 주소 : github.com/mk0537</p>
+                <p>github 주소 : github.com/mk0537</p>
             </div>
         </div>
     )
